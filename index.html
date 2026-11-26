@@ -199,6 +199,32 @@
       height: auto;
     }
 
+    .venue-box {
+      background: linear-gradient(145deg, rgba(212, 175, 55, 0.12), rgba(9, 19, 38, 0.85));
+      border: 1px solid rgba(212, 175, 55, 0.45);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-top: 14px;
+      text-align: right;
+    }
+
+    .venue-title {
+      color: var(--gold-light);
+      font-weight: 800;
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .venue-address {
+      color: var(--text-main);
+      font-size: 0.92rem;
+      font-weight: 600;
+      line-height: 1.75;
+    }
+
     .actions-grid {
       display: grid;
       gap: 10px;
@@ -213,6 +239,7 @@
       font-weight: 700;
       font-size: 0.95rem;
       text-align: center;
+      cursor: pointer;
     }
 
     .btn-whatsapp {
@@ -229,6 +256,7 @@
       background: rgba(255, 255, 255, 0.08);
       color: var(--text-main);
       border: 1px solid rgba(255, 255, 255, 0.18);
+      font-family: 'Cairo', sans-serif;
     }
 
     .status-note {
@@ -318,6 +346,16 @@
         </div>
 
         <div class="qr-container" id="qrOutput"></div>
+
+        <div class="venue-box" id="venueAddressBox">
+          <div class="venue-title">
+            <span>📍</span>
+            <span>عنوان مكان الحفل:</span>
+          </div>
+          <p class="venue-address" id="outVenueAddress">
+            نادي محافظة الفيوم، شارع أحمد شوقي، منطقة منشأة لطف الله، مدينة الفيوم، أمام ستاد الفيوم بجوار فيلا المحافظ
+          </p>
+        </div>
       </div>
 
       <p class="status-note" id="sheetStatus"></p>
@@ -349,6 +387,9 @@
   <script>
     const GOOGLE_SCRIPT_URL =
       "https://script.google.com/macros/s/AKfycbwTJy9wmJqFlYYtWuoXA988U6D29ieROr0i68B4-ysVQtXBoyEWcGw_p85-msfr4i-p/exec";
+
+    const VENUE_ADDRESS =
+      "نادي محافظة الفيوم، شارع أحمد شوقي، منطقة منشأة لطف الله، مدينة الفيوم، أمام ستاد الفيوم بجوار فيلا المحافظ";
 
     const form = document.getElementById("registrationForm");
     const fullNameInput = document.getElementById("fullName");
@@ -470,6 +511,7 @@
         fullName: cleanName,
         nationalId: nid,
         phoneNumber: phone,
+        venueAddress: VENUE_ADDRESS,
         registeredAt
       };
 
@@ -478,12 +520,14 @@
         `رقم التذكرة: ${ticketId}\n` +
         `الاسم: ${cleanName}\n` +
         `الرقم القومي: ${nid}\n` +
-        `التليفون: ${phone}`;
+        `التليفون: ${phone}\n` +
+        `العنوان: ${VENUE_ADDRESS}`;
 
       document.getElementById("ticketCodeDisplay").textContent = `كود التذكرة: ${ticketId}`;
       document.getElementById("outName").textContent = cleanName;
       document.getElementById("outNid").textContent = nid;
       document.getElementById("outPhone").textContent = phone;
+      document.getElementById("outVenueAddress").textContent = VENUE_ADDRESS;
 
       renderQRCode(qrPayload);
 
@@ -495,7 +539,6 @@
       formCard.style.display = "none";
       ticketSection.style.display = "block";
 
-      // تنظيف أي معاملات في رابط الصفحة دون إعادة تحميل
       if (window.history && window.history.replaceState) {
         window.history.replaceState({}, document.title, window.location.pathname);
       }
