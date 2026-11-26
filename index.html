@@ -290,12 +290,16 @@
                     <button 
                         type="submit" 
                         id="submitBtn"
-                        class="w-full btn-gold text-slate-950 font-extrabold text-base sm:text-lg py-4 px-6 rounded-2xl flex items-center justify-center gap-3 cursor-pointer"
+                        class="w-full btn-gold text-slate-950 font-extrabold text-base sm:text-lg py-4 px-6 rounded-2xl flex items-center justify-center gap-3 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <svg id="submitIcon" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"/>
                         </svg>
-                        <span>تأكيد التسجيل واستخراج بطاقة الدخول</span>
+                        <svg id="submitSpinner" class="hidden animate-spin w-6 h-6 text-slate-950" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span id="submitBtnText">تأكيد التسجيل وإصدار التذكرة</span>
                     </button>
                 </div>
             </form>
@@ -478,211 +482,16 @@
     </footer>
 
     <script>
+        // =========================================================================
+        // ضع رابط Google Apps Script الخاص بشيت الإكسيل هنا بين علامتي التنصيص:
+        const GOOGLE_SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
+        // =========================================================================
+
         // Storage key to preserve attendee ticket across page reloads
         const STORAGE_KEY = 'hawiyatuna_sanad_ticket_v1';
-
-        // DOM Elements
-        const registrationSection = document.getElementById('registrationSection');
-        const ticketSection = document.getElementById('ticketSection');
-        const registrationForm = document.getElementById('registrationForm');
-
-        const fullNameInput = document.getElementById('fullName');
-        const nationalIdInput = document.getElementById('nationalId');
-        const phoneNumberInput = document.getElementById('phoneNumber');
-
-        const nameWordCount = document.getElementById('nameWordCount');
-        const nidCounter = document.getElementById('nidCounter');
-        const phoneCounter = document.getElementById('phoneCounter');
-
-        // Convert Eastern Arabic Numerals (٠-٩) to Western Digits (0-9)
-        function normalizeDigits(str) {
-            const eastern = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
-            return str.replace(/[٠-٩]/g, d => eastern.indexOf(d));
-        }
-
-        // Custom Toast Notification Helper (Never use alert())
-        function showToast(message, type = 'error') {
-            const toastBox = document.getElementById('toastBox');
-            const toastIcon = document.getElementById('toastIcon');
-            const toastMessage = document.getElementById('toastMessage');
-
-            toastBox.classList.remove('hidden', 'bg-rose-500/15', 'border-rose-500/40', 'text-rose-200', 'bg-emerald-500/15', 'border-emerald-500/40', 'text-emerald-200');
-            
-            if (type === 'success') {
-                toastBox.classList.add('bg-emerald-500/15', 'border-emerald-500/40', 'text-emerald-200');
-                toastIcon.textContent = '✅';
-            } else {
-                toastBox.classList.add('bg-rose-500/15', 'border-rose-500/40', 'text-rose-200');
-                toastIcon.textContent = '⚠️';
-            }
-
-            toastMessage.textContent = message;
-            toastBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-
-        function hideToast() {
-            document.getElementById('toastBox').classList.add('hidden');
-        }
-
-        // Validation Helpers
-        function validateQuadrupleName(rawName) {
-            const cleaned = rawName.trim().replace(/\s+/g, ' ');
-            // Disallow numbers or special symbols
-            if (/[0-9٠-٩!@#$%^&*()_+=[\]{};':"\\|,.<>/?~`]/.test(cleaned)) {
-                return { valid: false, words: 0, msg: 'الاسم يجب أن يحتوي على حروف فقط بدون أرقام أو رموز.' };
-            }
-            const parts = cleaned ? cleaned.split(' ').filter(w => w.length >= 2) : [];
-            if (parts.length < 4) {
-                return { valid: false, words: parts.length, msg: `يرجى كتابة الاسم رباعي كاملاً (تم إدخال ${parts.length} من 4 مقاطع).` };
-            }
-            return { valid: true, words: parts.length, cleaned };
-        }
-
-        function validateNationalId(rawNid) {
-            const digitsOnly = normalizeDigits(rawNid).replace(/\D/g, '');
-            if (digitsOnly.length !== 14) {
-                return { valid: false, value: digitsOnly, msg: `الرقم القومي يجب أن يتكون من 14 رقم بالضبط (الحالي: ${digitsOnly.length} رقم).` };
-            }
-            if (!/^[23]\d{13}$/.test(digitsOnly)) {
-                return { valid: false, value: digitsOnly, msg: 'الرقم القومي المصري الصحيح يجب أن يبدأ برقم 2 أو 3.' };
-            }
-            return { valid: true, value: digitsOnly };
-        }
-
-        function validatePhone(rawPhone) {
-            const digitsOnly = normalizeDigits(rawPhone).replace(/\D/g, '');
-            if (digitsOnly.length !== 11) {
-                return { valid: false, value: digitsOnly, msg: `رقم الهاتف يجب أن يتكون من 11 رقم بالضبط (الحالي: ${digitsOnly.length} رقم).` };
-            }
-            if (!/^01[0125]\d{8}$/.test(digitsOnly)) {
-                return { valid: false, value: digitsOnly, msg: 'يرجى إدخال رقم هاتف مصري صحيح مكون من 11 رقم يبدأ بـ 010 أو 011 أو 012 أو 015.' };
-            }
-            return { valid: true, value: digitsOnly };
-        }
-
-        // Toggle Field Error Visuals
-        function setFieldState(inputEl, errorEl, errorTextEl, isValid, msg = '') {
-            if (isValid) {
-                inputEl.classList.remove('border-rose-500', 'focus:border-rose-500');
-                inputEl.classList.add('border-emerald-500/60');
-                errorEl.classList.add('hidden');
-            } else {
-                inputEl.classList.remove('border-emerald-500/60', 'border-slate-700');
-                inputEl.classList.add('border-rose-500');
-                if (msg) errorTextEl.textContent = msg;
-                errorEl.classList.remove('hidden');
-            }
-        }
-
-        // Live Input Listeners
-        fullNameInput.addEventListener('input', () => {
-            const res = validateQuadrupleName(fullNameInput.value);
-            nameWordCount.textContent = `${Math.min(res.words, 4)} / 4 مقاطع`;
-            if (res.valid) {
-                nameWordCount.className = 'text-xs px-2.5 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
-                setFieldState(fullNameInput, document.getElementById('fullNameError'), document.getElementById('fullNameErrorText'), true);
-            } else {
-                nameWordCount.className = 'text-xs px-2.5 py-0.5 rounded-lg bg-slate-800 text-slate-400 border border-slate-700';
-                if (fullNameInput.value.trim().length > 0) {
-                    document.getElementById('fullNameError').classList.add('hidden');
-                }
-            }
-        });
-
-        nationalIdInput.addEventListener('input', () => {
-            const cleanDigits = normalizeDigits(nationalIdInput.value).replace(/\D/g, '').slice(0, 14);
-            nationalIdInput.value = cleanDigits;
-            nidCounter.textContent = `${cleanDigits.length} / 14`;
-
-            if (cleanDigits.length === 14) {
-                const res = validateNationalId(cleanDigits);
-                if (res.valid) {
-                    nidCounter.className = 'text-xs font-mono px-2.5 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
-                    setFieldState(nationalIdInput, document.getElementById('nationalIdError'), document.getElementById('nationalIdErrorText'), true);
-                } else {
-                    setFieldState(nationalIdInput, document.getElementById('nationalIdError'), document.getElementById('nationalIdErrorText'), false, res.msg);
-                }
-            } else {
-                nidCounter.className = 'text-xs font-mono px-2.5 py-0.5 rounded-lg bg-slate-800 text-slate-400 border border-slate-700';
-                nationalIdInput.classList.remove('border-emerald-500/60', 'border-rose-500');
-                document.getElementById('nationalIdError').classList.add('hidden');
-            }
-        });
-
-        phoneNumberInput.addEventListener('input', () => {
-            const cleanDigits = normalizeDigits(phoneNumberInput.value).replace(/\D/g, '').slice(0, 11);
-            phoneNumberInput.value = cleanDigits;
-            phoneCounter.textContent = `${cleanDigits.length} / 11`;
-
-            if (cleanDigits.length === 11) {
-                const res = validatePhone(cleanDigits);
-                if (res.valid) {
-                    phoneCounter.className = 'text-xs font-mono px-2.5 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
-                    setFieldState(phoneNumberInput, document.getElementById('phoneNumberError'), document.getElementById('phoneNumberErrorText'), true);
-                } else {
-                    setFieldState(phoneNumberInput, document.getElementById('phoneNumberError'), document.getElementById('phoneNumberErrorText'), false, res.msg);
-                }
-            } else {
-                phoneCounter.className = 'text-xs font-mono px-2.5 py-0.5 rounded-lg bg-slate-800 text-slate-400 border border-slate-700';
-                phoneNumberInput.classList.remove('border-emerald-500/60', 'border-rose-500');
-                document.getElementById('phoneNumberError').classList.add('hidden');
-            }
-        });
-
-        // Generate Deterministic Ticket ID from National ID
-        function generateTicketCode(nid) {
-            const tail = nid.slice(-4);
-            const randomPart = Math.floor(100 + Math.random() * 900);
-            return `HS-${tail}-${randomPart}`;
-        }
-
-        // Render Ticket & QR Code
-        function renderTicket(data) {
-            document.getElementById('displayFullName').textContent = data.fullName;
-            document.getElementById('displayNationalId').textContent = data.nationalId;
-            document.getElementById('displayPhone').textContent = data.phoneNumber;
-            document.getElementById('displayDate').textContent = data.registeredAt;
-            document.getElementById('ticketRefBadge').textContent = `#${data.ticketId}`;
-
-            // Clear previous QR code if any
-            const qrContainer = document.getElementById('qrcode');
-            qrContainer.innerHTML = '';
-
-            // Structured attendee data payload
-            const qrPayload = [
-                `مبادرة هويتنا سند`,
-                `التذكرة: ${data.ticketId}`,
-                `الاسم: ${data.fullName}`,
-                `القومي: ${data.nationalId}`,
-                `الهاتف: ${data.phoneNumber}`,
-                `التاريخ: ${data.registeredAt}`
-            ].join('\n');
-
-            // Encode UTF-8 bytes properly and auto-select optimal QR version (typeNumber = 0)
-            qrcode.stringToBytes = qrcode.stringToBytesFuncs['UTF-8'];
-            const qr = qrcode(0, 'M');
-            qr.addData(qrPayload, 'Byte');
-            qr.make();
-
-            // Render crisp high-resolution SVG/IMG inside container
-            qrContainer.innerHTML = qr.createImgTag(5, 2);
-            const qrImg = qrContainer.querySelector('img');
-            if (qrImg) {
-                qrImg.style.width = '195px';
-                qrImg.style.height = '195px';
-                qrImg.style.display = 'block';
-                qrImg.alt = 'رمز الدخول السريع QR';
-            }
-
-            // Switch Views Smoothly
-            hideToast();
-            registrationSection.classList.add('hidden');
-            ticketSection.classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
+// ... existing code ... -->
         // Form Submission Handler
-        registrationForm.addEventListener('submit', (e) => {
+        registrationForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             hideToast();
 
@@ -710,12 +519,25 @@
                 return;
             }
 
+            // Show loading state on submit button
+            const submitBtn = document.getElementById('submitBtn');
+            const submitIcon = document.getElementById('submitIcon');
+            const submitSpinner = document.getElementById('submitSpinner');
+            const submitBtnText = document.getElementById('submitBtnText');
+
+            submitBtn.disabled = true;
+            submitIcon.classList.add('hidden');
+            submitSpinner.classList.remove('hidden');
+            submitBtnText.textContent = 'جاري تسجيل بياناتك وحفظ التذكرة...';
+
             // Format Egyptian Local Date & Time
             const now = new Date();
-            const formattedDate = now.toLocaleDateString('ar-EG', {
+            const formattedDate = now.toLocaleString('ar-EG', {
                 year: 'numeric',
                 month: '2-digit',
-                day: '2-digit'
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
             });
 
             const ticketData = {
@@ -726,73 +548,36 @@
                 registeredAt: formattedDate
             };
 
+            // Send data to Google Sheets if GOOGLE_SCRIPT_URL is configured
+            if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
+                try {
+                    await fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: {
+                            'Content-Type': 'text/plain;charset=utf-8'
+                        },
+                        body: JSON.stringify(ticketData)
+                    });
+                } catch (networkErr) {
+                    console.error('Google Sheets sync warning:', networkErr);
+                }
+            }
+
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(ticketData));
             } catch (err) {
                 // Ignore storage quota errors in private mode
             }
 
+            // Restore button state and render VIP ticket
+            submitBtn.disabled = false;
+            submitIcon.classList.remove('hidden');
+            submitSpinner.classList.add('hidden');
+            submitBtnText.textContent = 'تأكيد التسجيل وإصدار التذكرة';
+
             renderTicket(ticketData);
         });
 
         // Save Ticket Card as PNG Image
-        async function downloadTicketAsImage() {
-            const ticketEl = document.getElementById('printableTicket');
-            const btn = document.getElementById('downloadTicketBtn');
-            const originalHTML = btn.innerHTML;
-
-            try {
-                btn.disabled = true;
-                btn.innerHTML = '<span>جاري تجهيز صورة البطاقة...</span>';
-
-                const canvas = await html2canvas(ticketEl, {
-                    scale: 2.5,
-                    backgroundColor: '#080d1a',
-                    useCORS: true,
-                    logging: false
-                });
-
-                const link = document.createElement('a');
-                const ticketRef = document.getElementById('ticketRefBadge').textContent.replace('#', '');
-                link.download = `تذكرة-مبادرة-هويتنا-سند-${ticketRef}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-
-                showToast('تم تحميل بطاقة الدخول بنجاح على جهازك!', 'success');
-            } catch (error) {
-                showToast('حدث خطأ أثناء حفظ الصورة، يمكنك أخذ لقطة شاشة (Screenshot) للبطاقة.', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalHTML;
-            }
-        }
-
-        // Return to Registration Form
-        function resetToForm() {
-            ticketSection.classList.add('hidden');
-            registrationSection.classList.remove('hidden');
-            hideToast();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        // On Page Load: Check if user already registered and restore their ticket
-        window.addEventListener('DOMContentLoaded', () => {
-            try {
-                const saved = localStorage.getItem(STORAGE_KEY);
-                if (saved) {
-                    const parsed = JSON.parse(saved);
-                    if (parsed && parsed.fullName && parsed.nationalId && parsed.phoneNumber) {
-                        // Pre-fill form inputs in case they click "Edit" later
-                        fullNameInput.value = parsed.fullName;
-                        nationalIdInput.value = parsed.nationalId;
-                        phoneNumberInput.value = parsed.phoneNumber;
-                        renderTicket(parsed);
-                    }
-                }
-            } catch (err) {
-                // Fallback gracefully to registration form
-            }
-        });
-    </script>
-</body>
-</html>
+// ... existing code ... -->
