@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مبادرة هويتنا سند | التسجيل الإلكتروني وبطاقة الدخول</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Cairo & Amiri for authentic Egyptian royal & modern aesthetic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- QRCode & html2canvas for generating high-contrast QR tickets and saving them as PNG -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif'],
+                        amiri: ['Amiri', 'serif'],
+                    },
+                    colors: {
+                        obsidian: '#080d1a',
+                        navyDeep: '#0f172a',
+                        goldPrimary: '#d4af37',
+                        goldLight: '#f3d06b',
+                        goldDark: '#aa821c',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #080d1a;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        /* Subtle Pharaonic Lotus & Geometric Pattern Overlay */
+        .egypt-pattern {
+            background-image: radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.14) 0%, transparent 65%),
+                              radial-gradient(circle at 85% 85%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
+                              url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23d4af37' stroke-width='0.6' stroke-opacity='0.08'%3E%3Cpath d='M40 5 L55 25 L40 45 L25 25 Z'/%3E%3Cpath d='M40 35 L55 55 L40 75 L25 55 Z'/%3E%3Ccircle cx='40' cy='40' r='12'/%3E%3Cpath d='M0 40 L20 40 M60 40 L80 40 M40 0 L40 20 M40 60 L40 80'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Gold Metallic Gradient Text */
+        .text-gold-gradient {
+            background: linear-gradient(135deg, #f9e29c 0%, #d4af37 45%, #aa821c 80%, #f3d06b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Gold Metallic Button */
+        .btn-gold {
+            background: linear-gradient(135deg, #e5c158 0%, #c89d28 50%, #9e7614 100%);
+            box-shadow: 0 10px 25px -5px rgba(212, 175, 55, 0.35);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-gold:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px -5px rgba(212, 175, 55, 0.5);
+            filter: brightness(1.06);
+        }
+        .btn-gold:active {
+            transform: translateY(0);
+        }
+
+        /* Glassmorphic Card */
+        .glass-card {
+            background: rgba(15, 23, 42, 0.78);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.65);
+        }
+
+        /* Ticket Perforated Cutout Effect */
+        .ticket-divider {
+            position: relative;
+            border-top: 2px dashed rgba(212, 175, 55, 0.35);
+        }
+        .ticket-divider::before,
+        .ticket-divider::after {
+            content: '';
+            position: absolute;
+            top: -13px;
+            width: 24px;
+            height: 24px;
+            background-color: #080d1a;
+            border-radius: 9999px;
+            border: 1px solid rgba(212, 175, 55, 0.25);
+        }
+        .ticket-divider::before {
+            right: -37px;
+        }
+        .ticket-divider::after {
+            left: -37px;
+        }
+
+        /* Subtle Floating Animation for Emblem */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        .animate-float {
+            animation: floatSlow 4.5s ease-in-out infinite;
+        }
+
+        /* Fade Slide In */
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-enter {
+            animation: fadeSlideUp 0.55s ease-out forwards;
+        }
+
+        /* QR Code Container Styling */
+        #qrcode img, #qrcode canvas {
+            margin: 0 auto;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="egypt-pattern min-h-screen flex flex-col justify-between selection:bg-amber-500/30 selection:text-amber-200">
+
+    <!-- Top Royal Accent Bar -->
+    <div class="h-1.5 w-full bg-gradient-to-r from-amber-700 via-yellow-400 to-amber-700"></div>
+
+    <!-- Main Container -->
+    <main class="container mx-auto px-4 py-8 sm:py-12 max-w-2xl flex-grow flex flex-col justify-center">
+
+        <!-- Header / Initiative Identity -->
+        <header class="text-center mb-8 animate-enter">
+            <!-- Royal Egyptian Lotus & Sun Disc Emblem SVG -->
+            <div class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-b from-amber-500/20 to-slate-900/90 border border-amber-400/40 shadow-lg shadow-amber-500/10 mb-4 animate-float">
+                <svg class="w-12 h-12 sm:w-14 sm:h-14 text-amber-400" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Sun Disc & Wings Motif -->
+                    <circle cx="32" cy="18" r="7" fill="url(#goldGrad)" />
+                    <path d="M23 18C15 18 8 22 4 27C10 26 17 24 24 22" stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M41 18C49 18 56 22 60 27C54 26 47 24 40 22" stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round"/>
+                    <!-- Stylized Egyptian Lotus Crown -->
+                    <path d="M32 28C32 28 24 37 24 45C24 49 27.5 52 32 52C36.5 52 40 49 40 45C40 37 32 28 32 28Z" fill="url(#goldGrad)" fill-opacity="0.85"/>
+                    <path d="M23 34C18 36 14 41 15 47C18 49 22 49 25 47" stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M41 34C46 36 50 41 49 47C46 49 42 49 39 47" stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round"/>
+                    <!-- Base Pedestal -->
+                    <path d="M20 55H44" stroke="url(#goldGrad)" stroke-width="2.5" stroke-linecap="round"/>
+                    <defs>
+                        <linearGradient id="goldGrad" x1="4" y1="11" x2="60" y2="55" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#FDE68A"/>
+                            <stop offset="0.5" stop-color="#D4AF37"/>
+                            <stop offset="1" stop-color="#92400E"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+
+            <div class="inline-block px-4 py-1 rounded-full bg-amber-500/10 border border-amber-400/30 text-amber-300 text-xs sm:text-sm font-semibold tracking-wide mb-3">
+                🇪🇬 بوابة الحضور والتسجيل الإلكتروني المعتمدة
+            </div>
+
+            <h1 class="font-amiri text-4xl sm:text-5xl md:text-6xl font-bold text-gold-gradient leading-tight mb-2">
+                مبادرة هويتنا سند
+            </h1>
+            <p class="text-base sm:text-lg md:text-xl text-slate-200 font-semibold">
+                لتعزيز الوعي القومي بالهوية المصرية
+            </p>
+            <p class="text-xs sm:text-sm text-slate-400 max-w-lg mx-auto mt-2 leading-relaxed">
+                سجّل بياناتك بدقة للحصول على بطاقة الدخول الإلكترونية المزوّدة برمز الاستجابة السريع (QR Code) والانضمام إلى مجتمع المبادرة الرسمي.
+            </p>
+        </header>
+
+        <!-- Custom Alert / Notification Box (Replaces browser alert()) -->
+        <div id="toastBox" class="hidden mb-5 p-4 rounded-2xl border flex items-center gap-3 text-sm font-medium transition-all duration-300" role="alert">
+            <span id="toastIcon" class="text-lg"></span>
+            <span id="toastMessage" class="flex-1"></span>
+            <button type="button" onclick="hideToast()" class="text-slate-400 hover:text-white px-2 text-lg leading-none">&times;</button>
+        </div>
+
+        <!-- SECTION 1: REGISTRATION FORM -->
+        <section id="registrationSection" class="glass-card rounded-3xl p-6 sm:p-9 animate-enter">
+            <div class="flex items-center justify-between border-b border-amber-500/20 pb-4 mb-6">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>
+                        استمارة تسجيل الحضور
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">يرجى إدخال البيانات مطابقة لبطاقة الرقم القومي</p>
+                </div>
+                <span class="text-xs font-bold px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+                    تسجيل مجاني
+                </span>
+            </div>
+
+            <form id="registrationForm" novalidate class="space-y-6">
+                
+                <!-- Field 1: Full Quadruple Name -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label for="fullName" class="block text-sm font-bold text-slate-200">
+                            الاسم بالكامل <span class="text-amber-400">(رباعي على الأقل)</span> <span class="text-rose-400">*</span>
+                        </label>
+                        <span id="nameWordCount" class="text-xs px-2.5 py-0.5 rounded-lg bg-slate-800 text-slate-400 border border-slate-700">
+                            0 / 4 مقاطع
+                        </span>
+                    </div>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="fullName" 
+                            name="fullName"
+                            autocomplete="name"
+                            placeholder="مثال: أحمد محمد محمود إبراهيم"
+                            class="w-full bg-slate-900/90 text-white placeholder-slate-500 border border-slate-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-2xl px-4 py-3.5 text-base transition-all outline-none"
+                        >
+                    </div>
+                    <p id="fullNameError" class="hidden mt-2 text-xs text-rose-400 font-semibold flex items-center gap-1.5">
+                        <span>⚠️</span>
+                        <span id="fullNameErrorText">يجب إدخال الاسم رباعي بشكل صحيح (4 أسماء منفصلة بدون أرقام).</span>
+                    </p>
+                </div>
+
+                <!-- Field 2: 14-Digit National ID -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label for="nationalId" class="block text-sm font-bold text-slate-200">
+                            الرقم القومي <span class="text-amber-400">(14 رقم فقط)</span> <span class="text-rose-400">*</span>
+                        </label>
+                        <span id="nidCounter" class="text-xs font-mono px-2.5 py-0.5 rounded-lg bg-slate-800 text-slate-400 border border-slate-700">
+                            0 / 14
+                        </span>
+                    </div>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            inputmode="numeric"
+                            id="nationalId" 
+                            name="nationalId"
+                            maxlength="14"
+                            placeholder="أدخل الـ 14 رقم من بطاقة الرقم القومي"
+                            dir="ltr"
+                            class="w-full text-right bg-slate-900/90 text-white placeholder-slate-500 border border-slate-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-2xl px-4 py-3.5 text-base font-mono tracking-wider transition-all outline-none"
+                        >
+                    </div>
+                    <p id="nationalIdError" class="hidden mt-2 text-xs text-rose-400 font-semibold flex items-center gap-1.5">
+                        <span>⚠️</span>
+                        <span id="nationalIdErrorText">الرقم القومي يجب أن يتكون من 14 رقماً صحيحاً بالضبط.</span>
+                    </p>
+                </div>
+
+                <!-- Field 3: 11-Digit Phone Number -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label for="phoneNumber" class="block text-sm font-bold text-slate-200">
+                            رقم الهاتف / واتساب <span class="text-amber-400">(11 رقم فقط)</span> <span class="text-rose-400">*</span>
+                        </label>
+                        <span id="phoneCounter" class="text-xs font-mono px-2.5 py-0.5 rounded-lg bg-slate-800 text-slate-400 border border-slate-700">
+                            0 / 11
+                        </span>
+                    </div>
+                    <div class="relative">
+                        <input 
+                            type="tel" 
+                            inputmode="numeric"
+                            id="phoneNumber" 
+                            name="phoneNumber"
+                            maxlength="11"
+                            placeholder="01XXXXXXXXX"
+                            dir="ltr"
+                            class="w-full text-right bg-slate-900/90 text-white placeholder-slate-500 border border-slate-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-2xl px-4 py-3.5 text-base font-mono tracking-wider transition-all outline-none"
+                        >
+                    </div>
+                    <p id="phoneNumberError" class="hidden mt-2 text-xs text-rose-400 font-semibold flex items-center gap-1.5">
+                        <span>⚠️</span>
+                        <span id="phoneNumberErrorText">رقم الهاتف يجب أن يتكون من 11 رقماً ويبدأ بـ 01.</span>
+                    </p>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-2">
+                    <button 
+                        type="submit" 
+                        id="submitBtn"
+                        class="w-full btn-gold text-slate-950 font-extrabold text-base sm:text-lg py-4 px-6 rounded-2xl flex items-center justify-center gap-3 cursor-pointer"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"/>
+                        </svg>
+                        <span>تأكيد التسجيل واستخراج بطاقة الدخول</span>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Social Links Preview Below Form -->
+            <div class="mt-7 pt-5 border-t border-slate-800/90 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+                <span>تابع أخبار وفعاليات المبادرة عبر منصاتنا الرسمية:</span>
+                <div class="flex items-center gap-3">
+                    <a href="https://chat.whatsapp.com/FTxixPIwZwcKEWBm68ZH66?s=cl&p=a&iam=2" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 font-semibold transition">
+                        <span>جروب الواتساب</span>
+                        <span>↗</span>
+                    </a>
+                    <span class="text-slate-600">|</span>
+                    <a href="https://www.facebook.com/profile.php?id=61596318461517" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-blue-400 hover:text-blue-300 font-semibold transition">
+                        <span>صفحة الفيسبوك</span>
+                        <span>↗</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: DIGITAL VIP ENTRY PASS & QR CODE (Shown after successful registration) -->
+        <section id="ticketSection" class="hidden space-y-6 animate-enter">
+            
+            <!-- Success Banner -->
+            <div class="bg-emerald-500/15 border border-emerald-400/40 rounded-2xl p-4 text-center">
+                <p class="text-emerald-300 font-bold text-base sm:text-lg">
+                    🎉 تم تسجيل حضورك بنجاح في مبادرة هويتنا سند!
+                </p>
+                <p class="text-xs sm:text-sm text-slate-300 mt-1">
+                    احتفظ بهذه البطاقة الإلكترونية لإبراز رمز الـ QR عند بوابة الدخول، وانضم الآن لجروب الواتساب الرسمي.
+                </p>
+            </div>
+
+            <!-- Printable / Downloadable Digital Ticket Card -->
+            <div id="printableTicket" class="glass-card rounded-3xl overflow-hidden border-2 border-amber-400/50 shadow-2xl relative">
+                <!-- Top Gold Header Strip -->
+                <div class="bg-gradient-to-r from-amber-800 via-amber-500 to-amber-800 px-6 py-4 flex items-center justify-between text-slate-950">
+                    <div>
+                        <p class="text-[11px] font-extrabold uppercase tracking-wider opacity-85">تصريح دخول رسمي • VIP PASS</p>
+                        <h3 class="font-amiri text-2xl sm:text-3xl font-bold leading-none mt-0.5">مبادرة هويتنا سند</h3>
+                    </div>
+                    <div class="text-left">
+                        <span class="inline-block bg-slate-950/90 text-amber-300 text-xs font-mono font-bold px-3 py-1 rounded-xl" id="ticketRefBadge">
+                            #HS-0000
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Ticket Body -->
+                <div class="p-6 sm:p-8 bg-slate-900/95">
+                    <p class="text-center text-xs sm:text-sm text-amber-300/90 font-semibold mb-6">
+                        لتعزيز الوعي القومي بالهوية المصرية
+                    </p>
+
+                    <!-- Attendee Info Grid -->
+                    <div class="space-y-4 bg-slate-950/70 border border-amber-500/20 rounded-2xl p-5">
+                        <div class="border-b border-slate-800 pb-3">
+                            <span class="block text-xs text-slate-400 mb-1">اسم الحاضر (رباعي)</span>
+                            <span id="displayFullName" class="text-lg sm:text-xl font-extrabold text-white block">---</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                            <div>
+                                <span class="block text-xs text-slate-400 mb-1">الرقم القومي</span>
+                                <span id="displayNationalId" class="text-base sm:text-lg font-mono font-bold text-amber-300 tracking-wider block" dir="ltr">---</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs text-slate-400 mb-1">رقم الهاتف</span>
+                                <span id="displayPhone" class="text-base sm:text-lg font-mono font-bold text-slate-200 tracking-wider block" dir="ltr">---</span>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+                            <span>تاريخ الإصدار: <strong id="displayDate" class="text-slate-300">--/--/----</strong></span>
+                            <span class="text-emerald-400 font-bold flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+                                بطاقة مفعّلة
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Perforated Divider -->
+                    <div class="ticket-divider my-7"></div>
+
+                    <!-- QR Code Section -->
+                    <div class="flex flex-col items-center justify-center text-center">
+                        <div class="p-3.5 bg-white rounded-2xl shadow-lg shadow-amber-500/10 border-4 border-amber-400/80 mb-3">
+                            <div id="qrcode"></div>
+                        </div>
+                        <p class="text-xs sm:text-sm font-bold text-amber-300">
+                            امسح الكود عند بوابة الحفل للتحقق الفوري من بياناتك
+                        </p>
+                        <p class="text-[11px] text-slate-400 mt-1">
+                            يحتوي هذا الباركود على الاسم الرباعي والرقم القومي ورقم الهاتف ورقم التذكرة
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons (WhatsApp, Facebook, Download PNG) -->
+            <div class="glass-card rounded-3xl p-5 sm:p-6 space-y-3.5">
+                <h4 class="text-center text-sm font-bold text-slate-200 mb-2">
+                    خطوات هامة لإتمام انضمامك للمبادرة:
+                </h4>
+
+                <!-- 1. Official WhatsApp Group CTA -->
+                <a 
+                    href="https://chat.whatsapp.com/FTxixPIwZwcKEWBm68ZH66?s=cl&p=a&iam=2" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    class="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-extrabold text-base py-4 px-5 rounded-2xl shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-3 transition-all transform hover:-translate-y-0.5"
+                >
+                    <!-- WhatsApp SVG Icon -->
+                    <svg class="w-6 h-6 fill-current shrink-0" viewBox="0 0 24 24">
+                        <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm.029 18.88c-1.161 0-2.305-.292-3.318-.844l-3.677.964.984-3.595c-.607-1.052-.927-2.246-.926-3.468.001-3.825 3.113-6.937 6.937-6.937 1.856.001 3.598.723 4.907 2.034 1.31 1.311 2.031 3.054 2.03 4.908-.001 3.825-3.113 6.938-6.937 6.938z"/>
+                    </svg>
+                    <span>انضم الآن لجروب الواتساب الرسمي للمبادرة</span>
+                </a>
+
+                <!-- 2. Official Facebook Page CTA -->
+                <a 
+                    href="https://www.facebook.com/profile.php?id=61596318461517" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-base py-4 px-5 rounded-2xl shadow-lg shadow-blue-600/25 flex items-center justify-center gap-3 transition-all transform hover:-translate-y-0.5"
+                >
+                    <!-- Facebook SVG Icon -->
+                    <svg class="w-6 h-6 fill-current shrink-0" viewBox="0 0 24 24">
+                        <path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"/>
+                    </svg>
+                    <span>تابع صفحتنا الرسمية على فيسبوك</span>
+                </a>
+
+                <!-- 3. Download Ticket as Image -->
+                <button 
+                    type="button" 
+                    id="downloadTicketBtn"
+                    onclick="downloadTicketAsImage()"
+                    class="w-full btn-gold text-slate-950 font-extrabold text-base py-3.5 px-5 rounded-2xl flex items-center justify-center gap-2.5 cursor-pointer"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                    </svg>
+                    <span>حفظ بطاقة الدخول كصورة على الهاتف</span>
+                </button>
+
+                <!-- 4. Register Another Person / Edit -->
+                <div class="pt-2 text-center">
+                    <button 
+                        type="button" 
+                        onclick="resetToForm()"
+                        class="text-xs sm:text-sm text-slate-400 hover:text-amber-300 underline underline-offset-4 transition cursor-pointer"
+                    >
+                        تعديل البيانات أو تسجيل مرافق آخر
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 bg-slate-950/60 py-6 px-4 text-center text-xs text-slate-400">
+        <div class="max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p class="font-semibold text-slate-300">
+                جميع الحقوق محفوظة © <span class="text-amber-400">مبادرة هويتنا سند</span>
+            </p>
+            <div class="flex items-center gap-4">
+                <a href="https://chat.whatsapp.com/FTxixPIwZwcKEWBm68ZH66?s=cl&p=a&iam=2" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-400 transition">
+                    جروب الواتساب
+                </a>
+                <span>•</span>
+                <a href="https://www.facebook.com/profile.php?id=61596318461517" target="_blank" rel="noopener noreferrer" class="hover:text-blue-400 transition">
+                    صفحة الفيسبوك
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Storage key to preserve attendee ticket across page reloads
+        const STORAGE_KEY = 'hawiyatuna_sanad_ticket_v1';
+
+        // DOM Elements
+        const registrationSection = document.getElementById('registrationSection');
+        const ticketSection = document.getElementById('ticketSection');
+        const registrationForm = document.getElementById('registrationForm');
+
+        const fullNameInput = document.getElementById('fullName');
+        const nationalIdInput = document.getElementById('nationalId');
+        const phoneNumberInput = document.getElementById('phoneNumber');
+
+        const nameWordCount = document.getElementById('nameWordCount');
+        const nidCounter = document.getElementById('nidCounter');
+        const phoneCounter = document.getElementById('phoneCounter');
+
+        // Convert Eastern Arabic Numerals (٠-٩) to Western Digits (0-9)
+        function normalizeDigits(str) {
+            const eastern = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+            return str.replace(/[٠-٩]/g, d => eastern.indexOf(d));
+        }
+
+        // Custom Toast Notification Helper (Never use alert())
+        function showToast(message, type = 'error') {
+            const toastBox = document.getElementById('toastBox');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastMessage = document.getElementById('toastMessage');
+
+            toastBox.classList.remove('hidden', 'bg-rose-500/15', 'border-rose-500/40', 'text-rose-200', 'bg-emerald-500/15', 'border-emerald-500/40', 'text-emerald-200');
+            
+            if (type === 'success') {
+                toastBox.classList.add('bg-emerald-500/15', 'border-emerald-500/40', 'text-emerald-200');
+                toastIcon.textContent = '✅';
+            } else {
+                toastBox.classList.add('bg-rose-500/15', 'border-rose-500/40', 'text-rose-200');
+                toastIcon.textContent = '⚠️';
+            }
+
+            toastMessage.textContent = message;
+            toastBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function hideToast() {
+            document.getElementById('toastBox').classList.add('hidden');
+        }
+
+        // Validation Helpers
+        function validateQuadrupleName(rawName) {
+            const cleaned = rawName.trim().replace(/\s+/g, ' ');
+            // Disallow numbers or special symbols
+            if (/[0-9٠-٩!@#$%^&*()_+=[\]{};':"\\|,.<>/?~`]/.test(cleaned)) {
+                return { valid: false, words: 0, msg: 'الاسم يجب أن يحتوي على حروف فقط بدون أرقام أو رموز.' };
+            }
+            const parts = cleaned ? cleaned.split(' ').filter(w => w.length >= 2) : [];
+            if (parts.length < 4) {
+                return { valid: false, words: parts.length, msg: `يرجى كتابة الاسم رباعي كاملاً (تم إدخال ${parts.length} من 4 مقاطع).` };
+            }
+            return { valid: true, words: parts.length, cleaned };
+        }
+
+        function validateNationalId(rawNid) {
+            const digitsOnly = normalizeDigits(rawNid).replace(/\D/g, '');
+            if (digitsOnly.length !== 14) {
+                return { valid: false, value: digitsOnly, msg: `الرقم القومي يجب أن يتكون من 14 رقم بالضبط (الحالي: ${digitsOnly.length} رقم).` };
+            }
+            if (!/^[23]\d{13}$/.test(digitsOnly)) {
+                return { valid: false, value: digitsOnly, msg: 'الرقم القومي المصري الصحيح يجب أن يبدأ برقم 2 أو 3.' };
+            }
+            return { valid: true, value: digitsOnly };
+        }
+
+        function validatePhone(rawPhone) {
+            const digitsOnly = normalizeDigits(rawPhone).replace(/\D/g, '');
+            if (digitsOnly.length !== 11) {
+                return { valid: false, value: digitsOnly, msg: `رقم الهاتف يجب أن يتكون من 11 رقم بالضبط (الحالي: ${digitsOnly.length} رقم).` };
+            }
+            if (!/^01[0125]\d{8}$/.test(digitsOnly)) {
+                return { valid: false, value: digitsOnly, msg: 'يرجى إدخال رقم هاتف مصري صحيح مكون من 11 رقم يبدأ بـ 010 أو 011 أو 012 أو 015.' };
+            }
+            return { valid: true, value: digitsOnly };
+        }
+
+        // Toggle Field Error Visuals
+        function setFieldState(inputEl, errorEl, errorTextEl, isValid, msg = '') {
+            if (isValid) {
+                inputEl.classList.remove('border-rose-500', 'focus:border-rose-500');
+                inputEl.classList.add('border-emerald-500/60');
+                errorEl.classList.add('hidden');
+            } else {
+                inputEl.classList.remove('border-emerald-500/60', 'border-slate-700');
+                inputEl.classList.add('border-rose-500');
+                if (msg) errorTextEl.textContent = msg;
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        // Live Input Listeners
+        fullNameInput.addEventListener('input', () => {
+            const res = validateQuadrupleName(fullNameInput.value);
+            nameWordCount.textContent = `${Math.min(res.words, 4)} / 4 مقاطع`;
+            if (res.valid) {
+                nameWordCount.className = 'text-xs px-2.5 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+                setFieldState(fullNameInput, document.getElementById('fullNameError'), document.getElementById('fullNameErrorText'), true);
+            } else {
+                nameWordCount.className = 'text-xs px-2.5 py-0.5 rounded-lg bg-slate-800 text-slate-400 border border-slate-700';
+                if (fullNameInput.value.trim().length > 0) {
+                    document.getElementById('fullNameError').classList.add('hidden');
+                }
+            }
+        });
+
+        nationalIdInput.addEventListener('input', () => {
+            const cleanDigits = normalizeDigits(nationalIdInput.value).replace(/\D/g, '').slice(0, 14);
+            nationalIdInput.value = cleanDigits;
+            nidCounter.textContent = `${cleanDigits.length} / 14`;
+
+            if (cleanDigits.length === 14) {
+                const res = validateNationalId(cleanDigits);
+                if (res.valid) {
+                    nidCounter.className = 'text-xs font-mono px-2.5 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+                    setFieldState(nationalIdInput, document.getElementById('nationalIdError'), document.getElementById('nationalIdErrorText'), true);
+                } else {
+                    setFieldState(nationalIdInput, document.getElementById('nationalIdError'), document.getElementById('nationalIdErrorText'), false, res.msg);
+                }
+            } else {
+                nidCounter.className = 'text-xs font-mono px-2.5 py-0.5 rounded-lg bg-slate-800 text-slate-400 border border-slate-700';
+                nationalIdInput.classList.remove('border-emerald-500/60', 'border-rose-500');
+                document.getElementById('nationalIdError').classList.add('hidden');
+            }
+        });
+
+        phoneNumberInput.addEventListener('input', () => {
+            const cleanDigits = normalizeDigits(phoneNumberInput.value).replace(/\D/g, '').slice(0, 11);
+            phoneNumberInput.value = cleanDigits;
+            phoneCounter.textContent = `${cleanDigits.length} / 11`;
+
+            if (cleanDigits.length === 11) {
+                const res = validatePhone(cleanDigits);
+                if (res.valid) {
+                    phoneCounter.className = 'text-xs font-mono px-2.5 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+                    setFieldState(phoneNumberInput, document.getElementById('phoneNumberError'), document.getElementById('phoneNumberErrorText'), true);
+                } else {
+                    setFieldState(phoneNumberInput, document.getElementById('phoneNumberError'), document.getElementById('phoneNumberErrorText'), false, res.msg);
+                }
+            } else {
+                phoneCounter.className = 'text-xs font-mono px-2.5 py-0.5 rounded-lg bg-slate-800 text-slate-400 border border-slate-700';
+                phoneNumberInput.classList.remove('border-emerald-500/60', 'border-rose-500');
+                document.getElementById('phoneNumberError').classList.add('hidden');
+            }
+        });
+
+        // Generate Deterministic Ticket ID from National ID
+        function generateTicketCode(nid) {
+            const tail = nid.slice(-4);
+            const randomPart = Math.floor(100 + Math.random() * 900);
+            return `HS-${tail}-${randomPart}`;
+        }
+
+        // Render Ticket & QR Code
+        function renderTicket(data) {
+            document.getElementById('displayFullName').textContent = data.fullName;
+            document.getElementById('displayNationalId').textContent = data.nationalId;
+            document.getElementById('displayPhone').textContent = data.phoneNumber;
+            document.getElementById('displayDate').textContent = data.registeredAt;
+            document.getElementById('ticketRefBadge').textContent = `#${data.ticketId}`;
+
+            // Clear previous QR code if any
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+
+            // Structured attendee data payload
+            const qrPayload = [
+                `مبادرة هويتنا سند`,
+                `التذكرة: ${data.ticketId}`,
+                `الاسم: ${data.fullName}`,
+                `القومي: ${data.nationalId}`,
+                `الهاتف: ${data.phoneNumber}`,
+                `التاريخ: ${data.registeredAt}`
+            ].join('\n');
+
+            // Encode UTF-8 bytes properly and auto-select optimal QR version (typeNumber = 0)
+            qrcode.stringToBytes = qrcode.stringToBytesFuncs['UTF-8'];
+            const qr = qrcode(0, 'M');
+            qr.addData(qrPayload, 'Byte');
+            qr.make();
+
+            // Render crisp high-resolution SVG/IMG inside container
+            qrContainer.innerHTML = qr.createImgTag(5, 2);
+            const qrImg = qrContainer.querySelector('img');
+            if (qrImg) {
+                qrImg.style.width = '195px';
+                qrImg.style.height = '195px';
+                qrImg.style.display = 'block';
+                qrImg.alt = 'رمز الدخول السريع QR';
+            }
+
+            // Switch Views Smoothly
+            hideToast();
+            registrationSection.classList.add('hidden');
+            ticketSection.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Form Submission Handler
+        registrationForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            hideToast();
+
+            const nameCheck = validateQuadrupleName(fullNameInput.value);
+            const nidCheck = validateNationalId(nationalIdInput.value);
+            const phoneCheck = validatePhone(phoneNumberInput.value);
+
+            let hasError = false;
+
+            if (!nameCheck.valid) {
+                setFieldState(fullNameInput, document.getElementById('fullNameError'), document.getElementById('fullNameErrorText'), false, nameCheck.msg);
+                hasError = true;
+            }
+            if (!nidCheck.valid) {
+                setFieldState(nationalIdInput, document.getElementById('nationalIdError'), document.getElementById('nationalIdErrorText'), false, nidCheck.msg);
+                hasError = true;
+            }
+            if (!phoneCheck.valid) {
+                setFieldState(phoneNumberInput, document.getElementById('phoneNumberError'), document.getElementById('phoneNumberErrorText'), false, phoneCheck.msg);
+                hasError = true;
+            }
+
+            if (hasError) {
+                showToast('يرجى مراجعة البيانات المدخلة والتأكد من استيفاء جميع الشروط المطلوبة.', 'error');
+                return;
+            }
+
+            // Format Egyptian Local Date & Time
+            const now = new Date();
+            const formattedDate = now.toLocaleDateString('ar-EG', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+
+            const ticketData = {
+                ticketId: generateTicketCode(nidCheck.value),
+                fullName: nameCheck.cleaned,
+                nationalId: nidCheck.value,
+                phoneNumber: phoneCheck.value,
+                registeredAt: formattedDate
+            };
+
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(ticketData));
+            } catch (err) {
+                // Ignore storage quota errors in private mode
+            }
+
+            renderTicket(ticketData);
+        });
+
+        // Save Ticket Card as PNG Image
+        async function downloadTicketAsImage() {
+            const ticketEl = document.getElementById('printableTicket');
+            const btn = document.getElementById('downloadTicketBtn');
+            const originalHTML = btn.innerHTML;
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<span>جاري تجهيز صورة البطاقة...</span>';
+
+                const canvas = await html2canvas(ticketEl, {
+                    scale: 2.5,
+                    backgroundColor: '#080d1a',
+                    useCORS: true,
+                    logging: false
+                });
+
+                const link = document.createElement('a');
+                const ticketRef = document.getElementById('ticketRefBadge').textContent.replace('#', '');
+                link.download = `تذكرة-مبادرة-هويتنا-سند-${ticketRef}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                showToast('تم تحميل بطاقة الدخول بنجاح على جهازك!', 'success');
+            } catch (error) {
+                showToast('حدث خطأ أثناء حفظ الصورة، يمكنك أخذ لقطة شاشة (Screenshot) للبطاقة.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        }
+
+        // Return to Registration Form
+        function resetToForm() {
+            ticketSection.classList.add('hidden');
+            registrationSection.classList.remove('hidden');
+            hideToast();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // On Page Load: Check if user already registered and restore their ticket
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && parsed.fullName && parsed.nationalId && parsed.phoneNumber) {
+                        // Pre-fill form inputs in case they click "Edit" later
+                        fullNameInput.value = parsed.fullName;
+                        nationalIdInput.value = parsed.nationalId;
+                        phoneNumberInput.value = parsed.phoneNumber;
+                        renderTicket(parsed);
+                    }
+                }
+            } catch (err) {
+                // Fallback gracefully to registration form
+            }
+        });
+    </script>
+</body>
+</html>
