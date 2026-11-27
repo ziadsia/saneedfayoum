@@ -1,9 +1,10 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>مبادرة هويتنا سند - تسجيل الحضور</title>
+  <title>مبادرة هويتنا سند - تسجيل الحضور والاستعلام</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -74,6 +75,36 @@
       font-size: 0.95rem;
     }
 
+    .tabs-bar {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: rgba(9, 19, 38, 0.85);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      border-radius: 14px;
+      padding: 6px;
+      margin-bottom: 18px;
+    }
+
+    .tab-btn {
+      padding: 11px 12px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: 'Cairo', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, var(--gold), #b88b1e);
+      color: #091326;
+      font-weight: 800;
+    }
+
     .card {
       background: rgba(16, 32, 61, 0.92);
       border: 1px solid rgba(212, 175, 55, 0.25);
@@ -125,6 +156,30 @@
       font-size: 0.85rem;
       margin-top: 5px;
       min-height: 20px;
+    }
+
+    .alert-box {
+      display: none;
+      background: rgba(239, 68, 68, 0.14);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      color: #fecaca;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+    }
+
+    .alert-box button {
+      margin-top: 8px;
+      background: var(--gold);
+      color: #091326;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-family: 'Cairo', sans-serif;
+      font-weight: 800;
+      font-size: 0.85rem;
+      cursor: pointer;
     }
 
     .btn-primary {
@@ -260,9 +315,10 @@
     }
 
     .status-note {
-      font-size: 0.85rem;
+      font-size: 0.88rem;
       margin-top: 10px;
-      color: var(--text-muted);
+      color: var(--gold-light);
+      font-weight: 600;
     }
   </style>
 </head>
@@ -271,10 +327,21 @@
     <div class="header">
       <div class="badge">مبادرة هويتنا سند</div>
       <h1>تعزيز الوعي القومي بالهوية المصرية</h1>
-      <p class="subtitle">سجّل بياناتك للحصول على باركود الدخول الخاص بالحفل</p>
+      <p class="subtitle">سجّل بياناتك لمرة واحدة أو استعلم بالرقم القومي لعرض باركود الدخول</p>
     </div>
 
+    <div class="tabs-bar" id="tabsBar">
+      <button type="button" class="tab-btn active" id="tabRegister">تسجيل حضور جديد</button>
+      <button type="button" class="tab-btn" id="tabLookup">استعلام بالرقم القومي</button>
+    </div>
+
+    <!-- قسم التسجيل الجديد -->
     <div class="card" id="formCard">
+      <div class="alert-box" id="duplicateAlert">
+        <div id="duplicateAlertText">هذا الرقم القومي مسجل بالفعل ولا يمكن التسجيل به مرة أخرى.</div>
+        <button type="button" id="viewExistingTicketBtn">عرض بطاقة الدخول والباركود الخاص بك</button>
+      </div>
+
       <form id="registrationForm" novalidate>
         <div class="form-group">
           <label for="fullName">الاسم الرباعي</label>
@@ -304,7 +371,7 @@
             required
           />
           <div class="hint-row">
-            <span>أرقام فقط بدون مسافات</span>
+            <span>التسجيل مسموح مرة واحدة فقط لكل رقم قومي</span>
             <span id="nidCount">0 / 14</span>
           </div>
           <div class="error-msg" id="nidError"></div>
@@ -334,6 +401,33 @@
       </form>
     </div>
 
+    <!-- قسم الاستعلام بالرقم القومي -->
+    <div class="card" id="lookupCard" style="display: none;">
+      <form id="lookupForm" novalidate>
+        <div class="form-group">
+          <label for="lookupNationalId">أدخل الرقم القومي للاستعلام عن تذكرتك</label>
+          <input
+            type="text"
+            id="lookupNationalId"
+            inputmode="numeric"
+            maxlength="14"
+            placeholder="أدخل الـ 14 رقم الخاصين بالرقم القومي"
+            required
+          />
+          <div class="hint-row">
+            <span>أرقام فقط بدون مسافات</span>
+            <span id="lookupNidCount">0 / 14</span>
+          </div>
+          <div class="error-msg" id="lookupError"></div>
+        </div>
+
+        <button type="submit" class="btn-primary" id="lookupBtn">
+          استعلام وعرض الباركود
+        </button>
+      </form>
+    </div>
+
+    <!-- بطاقة التذكرة والباركود -->
     <div class="card ticket-box" id="ticketSection">
       <div class="ticket-card" id="ticketCaptureArea">
         <div class="ticket-id" id="ticketCodeDisplay"></div>
@@ -378,7 +472,7 @@
           متابعة صفحة الفيسبوك الرسمية
         </a>
         <button type="button" class="btn-link btn-secondary" id="resetBtn">
-          تسجيل شخص آخر
+          العودة للرئيسية / تسجيل أو استعلام آخر
         </button>
       </div>
     </div>
@@ -390,6 +484,16 @@
 
     const VENUE_ADDRESS =
       "نادي محافظة الفيوم، شارع أحمد شوقي، منطقة منشأة لطف الله، مدينة الفيوم، أمام ستاد الفيوم بجوار فيلا المحافظ";
+
+    const STORAGE_KEY = "hawiyatuna_sanad_records_v1";
+
+    const tabRegister = document.getElementById("tabRegister");
+    const tabLookup = document.getElementById("tabLookup");
+    const tabsBar = document.getElementById("tabsBar");
+
+    const formCard = document.getElementById("formCard");
+    const lookupCard = document.getElementById("lookupCard");
+    const ticketSection = document.getElementById("ticketSection");
 
     const form = document.getElementById("registrationForm");
     const fullNameInput = document.getElementById("fullName");
@@ -403,11 +507,20 @@
     const nidCount = document.getElementById("nidCount");
     const phoneCount = document.getElementById("phoneCount");
 
+    const duplicateAlert = document.getElementById("duplicateAlert");
+    const viewExistingTicketBtn = document.getElementById("viewExistingTicketBtn");
+
+    const lookupForm = document.getElementById("lookupForm");
+    const lookupNationalIdInput = document.getElementById("lookupNationalId");
+    const lookupNidCount = document.getElementById("lookupNidCount");
+    const lookupError = document.getElementById("lookupError");
+    const lookupBtn = document.getElementById("lookupBtn");
+
     const submitBtn = document.getElementById("submitBtn");
-    const formCard = document.getElementById("formCard");
-    const ticketSection = document.getElementById("ticketSection");
     const sheetStatus = document.getElementById("sheetStatus");
     const resetBtn = document.getElementById("resetBtn");
+
+    let cachedExistingRecord = null;
 
     function normalizeDigits(str) {
       return str
@@ -415,11 +528,49 @@
         .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 1776));
     }
 
+    function getLocalRecords() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function saveLocalRecord(record) {
+      try {
+        const all = getLocalRecords();
+        all[record.nationalId] = record;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+      } catch (e) {}
+    }
+
+    function switchTab(mode) {
+      duplicateAlert.style.display = "none";
+      ticketSection.style.display = "none";
+      tabsBar.style.display = "grid";
+
+      if (mode === "register") {
+        tabRegister.classList.add("active");
+        tabLookup.classList.remove("active");
+        formCard.style.display = "block";
+        lookupCard.style.display = "none";
+      } else {
+        tabLookup.classList.add("active");
+        tabRegister.classList.remove("active");
+        formCard.style.display = "none";
+        lookupCard.style.display = "block";
+      }
+    }
+
+    tabRegister.addEventListener("click", () => switchTab("register"));
+    tabLookup.addEventListener("click", () => switchTab("lookup"));
+
     nationalIdInput.addEventListener("input", () => {
       const cleaned = normalizeDigits(nationalIdInput.value).replace(/\D/g, "").slice(0, 14);
       nationalIdInput.value = cleaned;
       nidCount.textContent = `${cleaned.length} / 14`;
       nidError.textContent = "";
+      duplicateAlert.style.display = "none";
     });
 
     phoneNumberInput.addEventListener("input", () => {
@@ -431,6 +582,13 @@
 
     fullNameInput.addEventListener("input", () => {
       nameError.textContent = "";
+    });
+
+    lookupNationalIdInput.addEventListener("input", () => {
+      const cleaned = normalizeDigits(lookupNationalIdInput.value).replace(/\D/g, "").slice(0, 14);
+      lookupNationalIdInput.value = cleaned;
+      lookupNidCount.textContent = `${cleaned.length} / 14`;
+      lookupError.textContent = "";
     });
 
     function validateForm() {
@@ -471,37 +629,122 @@
       }
     }
 
+    function displayTicket(record, statusMessage) {
+      const venue = record.venueAddress || VENUE_ADDRESS;
+      const qrPayload =
+        `مبادرة هويتنا سند\n` +
+        `رقم التذكرة: ${record.ticketId}\n` +
+        `الاسم: ${record.fullName}\n` +
+        `الرقم القومي: ${record.nationalId}\n` +
+        `التليفون: ${record.phoneNumber}\n` +
+        `العنوان: ${venue}`;
+
+      document.getElementById("ticketCodeDisplay").textContent = `كود التذكرة: ${record.ticketId}`;
+      document.getElementById("outName").textContent = record.fullName;
+      document.getElementById("outNid").textContent = record.nationalId;
+      document.getElementById("outPhone").textContent = record.phoneNumber;
+      document.getElementById("outVenueAddress").textContent = venue;
+
+      renderQRCode(qrPayload);
+
+      sheetStatus.textContent = statusMessage;
+      formCard.style.display = "none";
+      lookupCard.style.display = "none";
+      tabsBar.style.display = "none";
+      ticketSection.style.display = "block";
+
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+
+    async function lookupByNationalId(nid) {
+      const localAll = getLocalRecords();
+      if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL.startsWith("https://")) {
+        try {
+          const url = `${GOOGLE_SCRIPT_URL}?action=lookup&nationalId=${encodeURIComponent(nid)}&_t=${Date.now()}`;
+          const res = await fetch(url, { method: "GET" });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.status === "found" && data.record) {
+              saveLocalRecord(data.record);
+              return data.record;
+            }
+            if (data.status === "not_found") {
+              return null;
+            }
+          }
+        } catch (err) {
+          // الاعتماد على السجل المحلي في حال عدم تحديث السكريبت بعد
+        }
+      }
+      return localAll[nid] || null;
+    }
+
     async function sendToGoogleSheets(record) {
       if (!GOOGLE_SCRIPT_URL || !GOOGLE_SCRIPT_URL.startsWith("https://")) {
-        return false;
+        return { ok: false };
       }
 
       try {
-        await fetch(GOOGLE_SCRIPT_URL, {
+        const res = await fetch(GOOGLE_SCRIPT_URL, {
           method: "POST",
-          mode: "no-cors",
           headers: {
             "Content-Type": "text/plain;charset=utf-8"
           },
           body: JSON.stringify(record)
         });
-        return true;
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === "duplicate" && data.record) {
+            return { ok: false, duplicate: true, record: data.record };
+          }
+          return { ok: true };
+        }
       } catch (err) {
-        return false;
+        try {
+          await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8"
+            },
+            body: JSON.stringify(record)
+          });
+          return { ok: true };
+        } catch (e2) {
+          return { ok: false };
+        }
       }
+      return { ok: true };
     }
+
+    viewExistingTicketBtn.addEventListener("click", () => {
+      if (cachedExistingRecord) {
+        displayTicket(cachedExistingRecord, "تم استرجاع بطاقة الحضور المسجلة مسبقاً لهذا الرقم القومي.");
+      }
+    });
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       event.stopPropagation();
 
       const { valid, cleanName, nid, phone } = validateForm();
-      if (!valid) {
-        return;
-      }
+      if (!valid) return;
 
       submitBtn.disabled = true;
-      submitBtn.textContent = "جاري إصدار التذكرة وحفظ البيانات...";
+      submitBtn.textContent = "جاري التحقق من الرقم القومي وتسجيل البيانات...";
+      duplicateAlert.style.display = "none";
+
+      const existing = await lookupByNationalId(nid);
+      if (existing) {
+        cachedExistingRecord = existing;
+        duplicateAlert.style.display = "block";
+        submitBtn.disabled = false;
+        submitBtn.textContent = "تأكيد التسجيل وإصدار الباركود";
+        return;
+      }
 
       const ticketId = "HWT-" + Date.now().toString().slice(-6);
       const registeredAt = new Date().toLocaleString("ar-EG");
@@ -515,48 +758,68 @@
         registeredAt
       };
 
-      const qrPayload =
-        `مبادرة هويتنا سند\n` +
-        `رقم التذكرة: ${ticketId}\n` +
-        `الاسم: ${cleanName}\n` +
-        `الرقم القومي: ${nid}\n` +
-        `التليفون: ${phone}\n` +
-        `العنوان: ${VENUE_ADDRESS}`;
+      const postResult = await sendToGoogleSheets(record);
 
-      document.getElementById("ticketCodeDisplay").textContent = `كود التذكرة: ${ticketId}`;
-      document.getElementById("outName").textContent = cleanName;
-      document.getElementById("outNid").textContent = nid;
-      document.getElementById("outPhone").textContent = phone;
-      document.getElementById("outVenueAddress").textContent = VENUE_ADDRESS;
-
-      renderQRCode(qrPayload);
-
-      const sent = await sendToGoogleSheets(record);
-      sheetStatus.textContent = sent
-        ? "تم تسجيل بياناتك وإصدار الباركود بنجاح."
-        : "تم إصدار الباركود بنجاح (تعذر التأكد من الاتصال بالشيت حالياً).";
-
-      formCard.style.display = "none";
-      ticketSection.style.display = "block";
-
-      if (window.history && window.history.replaceState) {
-        window.history.replaceState({}, document.title, window.location.pathname);
+      if (postResult.duplicate && postResult.record) {
+        saveLocalRecord(postResult.record);
+        cachedExistingRecord = postResult.record;
+        duplicateAlert.style.display = "block";
+        submitBtn.disabled = false;
+        submitBtn.textContent = "تأكيد التسجيل وإصدار الباركود";
+        return;
       }
+
+      saveLocalRecord(record);
+      displayTicket(
+        record,
+        postResult.ok
+          ? "تم تسجيل بياناتك وإصدار الباركود بنجاح (مسجل لمرة واحدة برقمك القومي)."
+          : "تم إصدار الباركود وحفظه بنجاح."
+      );
 
       submitBtn.disabled = false;
       submitBtn.textContent = "تأكيد التسجيل وإصدار الباركود";
     });
 
+    lookupForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const nid = lookupNationalIdInput.value.trim();
+      if (!/^\d{14}$/.test(nid)) {
+        lookupError.textContent = "يرجى إدخال الرقم القومي الصحيح المكون من 14 رقماً.";
+        return;
+      }
+
+      lookupBtn.disabled = true;
+      lookupBtn.textContent = "جاري البحث عن التذكرة...";
+      lookupError.textContent = "";
+
+      const foundRecord = await lookupByNationalId(nid);
+
+      if (foundRecord) {
+        displayTicket(foundRecord, "تم العثور على تسجيلك بنجاح. يمكنك استخدام هذا الباركود للدخول.");
+      } else {
+        lookupError.textContent = "هذا الرقم القومي غير مسجل حتى الآن. يمكنك التسجيل من تبويب (تسجيل حضور جديد).";
+      }
+
+      lookupBtn.disabled = false;
+      lookupBtn.textContent = "استعلام وعرض الباركود";
+    });
+
     resetBtn.addEventListener("click", () => {
       form.reset();
+      lookupForm.reset();
       nidCount.textContent = "0 / 14";
       phoneCount.textContent = "0 / 11";
+      lookupNidCount.textContent = "0 / 14";
       nameError.textContent = "";
       nidError.textContent = "";
       phoneError.textContent = "";
-      ticketSection.style.display = "none";
-      formCard.style.display = "block";
+      lookupError.textContent = "";
+      switchTab("register");
     });
   </script>
 </body>
 </html>
+```
