@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -9,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <style>
     :root {
       --bg-dark: #091326;
@@ -37,7 +37,7 @@
     }
 
     .container {
-      max-width: 560px;
+      max-width: 580px;
       margin: 0 auto;
     }
 
@@ -47,7 +47,7 @@
       border: 1px solid rgba(212, 175, 55, 0.45);
       border-radius: 20px;
       padding: 24px 20px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
     }
 
@@ -75,33 +75,30 @@
       font-size: 0.95rem;
     }
 
-    .tabs-bar {
+    .tabs {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      background: rgba(9, 19, 38, 0.85);
-      border: 1px solid rgba(212, 175, 55, 0.3);
-      border-radius: 14px;
-      padding: 6px;
-      margin-bottom: 18px;
+      gap: 10px;
+      margin-bottom: 16px;
     }
 
     .tab-btn {
-      padding: 11px 12px;
-      border: none;
-      border-radius: 10px;
-      background: transparent;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      background: rgba(16, 32, 61, 0.75);
       color: var(--text-muted);
       font-family: 'Cairo', sans-serif;
-      font-size: 0.95rem;
       font-weight: 700;
+      font-size: 0.95rem;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.2s;
     }
 
     .tab-btn.active {
       background: linear-gradient(135deg, var(--gold), #b88b1e);
       color: #091326;
+      border-color: var(--gold-light);
       font-weight: 800;
     }
 
@@ -158,30 +155,6 @@
       min-height: 20px;
     }
 
-    .alert-box {
-      display: none;
-      background: rgba(239, 68, 68, 0.14);
-      border: 1px solid rgba(239, 68, 68, 0.5);
-      color: #fecaca;
-      border-radius: 12px;
-      padding: 12px 14px;
-      margin-bottom: 16px;
-      font-size: 0.9rem;
-    }
-
-    .alert-box button {
-      margin-top: 8px;
-      background: var(--gold);
-      color: #091326;
-      border: none;
-      border-radius: 8px;
-      padding: 6px 12px;
-      font-family: 'Cairo', sans-serif;
-      font-weight: 800;
-      font-size: 0.85rem;
-      cursor: pointer;
-    }
-
     .btn-primary {
       width: 100%;
       padding: 14px;
@@ -216,14 +189,21 @@
       border: 2px solid var(--gold);
       border-radius: 18px;
       padding: 20px;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
     .ticket-id {
       color: var(--gold-light);
       font-weight: 800;
       font-size: 1rem;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
+    }
+
+    .ticket-card h3 {
+      font-family: 'Amiri', serif;
+      font-size: 1.55rem;
+      color: var(--gold-light);
+      margin-bottom: 8px;
     }
 
     .ticket-details {
@@ -239,13 +219,38 @@
       margin-bottom: 6px;
     }
 
+    .ticket-details p:last-child {
+      margin-bottom: 0;
+    }
+
+    .venue-box {
+      text-align: right;
+      background: rgba(212, 175, 55, 0.12);
+      border: 1px solid rgba(212, 175, 55, 0.45);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-top: 12px;
+      margin-bottom: 14px;
+    }
+
+    .venue-title {
+      color: var(--gold-light);
+      font-weight: 800;
+      font-size: 0.98rem;
+      margin-bottom: 4px;
+    }
+
+    .venue-address {
+      color: var(--text-main);
+      font-size: 0.92rem;
+    }
+
     .qr-container {
       display: flex;
       justify-content: center;
       margin: 14px 0;
     }
 
-    .qr-container canvas,
     .qr-container img {
       background: #ffffff;
       padding: 10px;
@@ -254,30 +259,59 @@
       height: auto;
     }
 
-    .venue-box {
-      background: linear-gradient(145deg, rgba(212, 175, 55, 0.12), rgba(9, 19, 38, 0.85));
-      border: 1px solid rgba(212, 175, 55, 0.45);
-      border-radius: 14px;
-      padding: 14px 16px;
-      margin-top: 14px;
-      text-align: right;
+    .export-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
     }
 
-    .venue-title {
-      color: var(--gold-light);
+    @media (max-width: 480px) {
+      .export-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .btn-export-png {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(240, 214, 117, 0.65);
+      background: linear-gradient(135deg, #d4af37, #a67c14);
+      color: #091326;
+      font-family: 'Cairo', sans-serif;
       font-weight: 800;
-      font-size: 0.95rem;
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      font-size: 0.92rem;
+      cursor: pointer;
+      transition: transform 0.15s, filter 0.2s;
     }
 
-    .venue-address {
-      color: var(--text-main);
+    .btn-export-png:hover:not(:disabled) {
+      filter: brightness(1.06);
+      transform: translateY(-1px);
+    }
+
+    .btn-export-pdf {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(212, 175, 55, 0.55);
+      background: rgba(16, 32, 61, 0.95);
+      color: var(--gold-light);
+      font-family: 'Cairo', sans-serif;
+      font-weight: 800;
       font-size: 0.92rem;
-      font-weight: 600;
-      line-height: 1.75;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.2s;
+    }
+
+    .btn-export-pdf:hover:not(:disabled) {
+      background: rgba(25, 48, 90, 0.95);
+      transform: translateY(-1px);
+    }
+
+    .btn-export-png:disabled,
+    .btn-export-pdf:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
     }
 
     .actions-grid {
@@ -319,6 +353,7 @@
       margin-top: 10px;
       color: var(--gold-light);
       font-weight: 600;
+      min-height: 22px;
     }
   </style>
 </head>
@@ -327,21 +362,15 @@
     <div class="header">
       <div class="badge">مبادرة هويتنا سند</div>
       <h1>تعزيز الوعي القومي بالهوية المصرية</h1>
-      <p class="subtitle">سجّل بياناتك لمرة واحدة أو استعلم بالرقم القومي لعرض باركود الدخول</p>
+      <p class="subtitle">تسجيل الحضور واستعلام الباركود بالرقم القومي</p>
     </div>
 
-    <div class="tabs-bar" id="tabsBar">
-      <button type="button" class="tab-btn active" id="tabRegister">تسجيل حضور جديد</button>
-      <button type="button" class="tab-btn" id="tabLookup">استعلام بالرقم القومي</button>
+    <div class="tabs" id="tabsBar">
+      <button type="button" class="tab-btn active" id="tabRegisterBtn">تسجيل جديد</button>
+      <button type="button" class="tab-btn" id="tabLookupBtn">استعلام بالرقم القومي</button>
     </div>
 
-    <!-- قسم التسجيل الجديد -->
-    <div class="card" id="formCard">
-      <div class="alert-box" id="duplicateAlert">
-        <div id="duplicateAlertText">هذا الرقم القومي مسجل بالفعل ولا يمكن التسجيل به مرة أخرى.</div>
-        <button type="button" id="viewExistingTicketBtn">عرض بطاقة الدخول والباركود الخاص بك</button>
-      </div>
-
+    <div class="card" id="registerCard">
       <form id="registrationForm" novalidate>
         <div class="form-group">
           <label for="fullName">الاسم الرباعي</label>
@@ -371,7 +400,7 @@
             required
           />
           <div class="hint-row">
-            <span>التسجيل مسموح مرة واحدة فقط لكل رقم قومي</span>
+            <span>أرقام فقط بدون مسافات - التسجيل لمرة واحدة فقط</span>
             <span id="nidCount">0 / 14</span>
           </div>
           <div class="error-msg" id="nidError"></div>
@@ -401,35 +430,33 @@
       </form>
     </div>
 
-    <!-- قسم الاستعلام بالرقم القومي -->
     <div class="card" id="lookupCard" style="display: none;">
       <form id="lookupForm" novalidate>
         <div class="form-group">
-          <label for="lookupNationalId">أدخل الرقم القومي للاستعلام عن تذكرتك</label>
+          <label for="lookupNid">الاستعلام بالرقم القومي (14 رقم)</label>
           <input
             type="text"
-            id="lookupNationalId"
+            id="lookupNid"
             inputmode="numeric"
             maxlength="14"
-            placeholder="أدخل الـ 14 رقم الخاصين بالرقم القومي"
+            placeholder="أدخل الرقم القومي المسجل مسبقاً"
             required
           />
           <div class="hint-row">
-            <span>أرقام فقط بدون مسافات</span>
-            <span id="lookupNidCount">0 / 14</span>
+            <span>يظهر الباركود للمسجلين الجدد والقدامى</span>
+            <span id="lookupCount">0 / 14</span>
           </div>
           <div class="error-msg" id="lookupError"></div>
         </div>
 
         <button type="submit" class="btn-primary" id="lookupBtn">
-          استعلام وعرض الباركود
+          بحث وإظهار الباركود
         </button>
       </form>
     </div>
 
-    <!-- بطاقة التذكرة والباركود -->
     <div class="card ticket-box" id="ticketSection">
-      <div class="ticket-card" id="ticketCaptureArea">
+      <div class="ticket-card" id="ticketCardElement">
         <div class="ticket-id" id="ticketCodeDisplay"></div>
         <h3>بطاقة حضور مبادرة هويتنا سند</h3>
 
@@ -441,14 +468,20 @@
 
         <div class="qr-container" id="qrOutput"></div>
 
-        <div class="venue-box" id="venueAddressBox">
-          <div class="venue-title">
-            <span>📍</span>
-            <span>عنوان مكان الحفل:</span>
-          </div>
-          <p class="venue-address" id="outVenueAddress">
+        <div class="venue-box">
+          <div class="venue-title">عنوان الحفل:</div>
+          <div class="venue-address">
             نادي محافظة الفيوم، شارع أحمد شوقي، منطقة منشأة لطف الله، مدينة الفيوم، أمام ستاد الفيوم بجوار فيلا المحافظ
-          </p>
+          </div>
+        </div>
+
+        <div class="export-grid">
+          <button type="button" class="btn-export-png" id="downloadPngBtn">
+            تحميل التذكرة كصورة (PNG)
+          </button>
+          <button type="button" class="btn-export-pdf" id="downloadPdfBtn">
+            تحميل التذكرة كـ PDF
+          </button>
         </div>
       </div>
 
@@ -471,8 +504,8 @@
         >
           متابعة صفحة الفيسبوك الرسمية
         </a>
-        <button type="button" class="btn-link btn-secondary" id="resetBtn">
-          العودة للرئيسية / تسجيل أو استعلام آخر
+        <button type="button" class="btn-link btn-secondary" id="backHomeBtn">
+          العودة إلى صفحة التسجيل والاستعلام
         </button>
       </div>
     </div>
@@ -482,16 +515,13 @@
     const GOOGLE_SCRIPT_URL =
       "https://script.google.com/macros/s/AKfycbwTJy9wmJqFlYYtWuoXA988U6D29ieROr0i68B4-ysVQtXBoyEWcGw_p85-msfr4i-p/exec";
 
-    const VENUE_ADDRESS =
+    const VENUE_TEXT =
       "نادي محافظة الفيوم، شارع أحمد شوقي، منطقة منشأة لطف الله، مدينة الفيوم، أمام ستاد الفيوم بجوار فيلا المحافظ";
 
-    const STORAGE_KEY = "hawiyatuna_sanad_records_v1";
-
-    const tabRegister = document.getElementById("tabRegister");
-    const tabLookup = document.getElementById("tabLookup");
+    const tabRegisterBtn = document.getElementById("tabRegisterBtn");
+    const tabLookupBtn = document.getElementById("tabLookupBtn");
     const tabsBar = document.getElementById("tabsBar");
-
-    const formCard = document.getElementById("formCard");
+    const registerCard = document.getElementById("registerCard");
     const lookupCard = document.getElementById("lookupCard");
     const ticketSection = document.getElementById("ticketSection");
 
@@ -506,31 +536,31 @@
 
     const nidCount = document.getElementById("nidCount");
     const phoneCount = document.getElementById("phoneCount");
-
-    const duplicateAlert = document.getElementById("duplicateAlert");
-    const viewExistingTicketBtn = document.getElementById("viewExistingTicketBtn");
+    const submitBtn = document.getElementById("submitBtn");
 
     const lookupForm = document.getElementById("lookupForm");
-    const lookupNationalIdInput = document.getElementById("lookupNationalId");
-    const lookupNidCount = document.getElementById("lookupNidCount");
+    const lookupNidInput = document.getElementById("lookupNid");
+    const lookupCount = document.getElementById("lookupCount");
     const lookupError = document.getElementById("lookupError");
     const lookupBtn = document.getElementById("lookupBtn");
 
-    const submitBtn = document.getElementById("submitBtn");
     const sheetStatus = document.getElementById("sheetStatus");
-    const resetBtn = document.getElementById("resetBtn");
+    const backHomeBtn = document.getElementById("backHomeBtn");
+    const downloadPngBtn = document.getElementById("downloadPngBtn");
+    const downloadPdfBtn = document.getElementById("downloadPdfBtn");
 
-    let cachedExistingRecord = null;
+    let activeTicketRecord = null;
+    let activeQrDataUrl = "";
 
     function normalizeDigits(str) {
-      return str
+      return String(str || "")
         .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 1632))
         .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 1776));
     }
 
-    function getLocalRecords() {
+    function getLocalRegistry() {
       try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+        return JSON.parse(localStorage.getItem("hawetna_sand_registry") || "{}");
       } catch (e) {
         return {};
       }
@@ -538,39 +568,36 @@
 
     function saveLocalRecord(record) {
       try {
-        const all = getLocalRecords();
-        all[record.nationalId] = record;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+        const registry = getLocalRegistry();
+        registry[record.nationalId] = record;
+        localStorage.setItem("hawetna_sand_registry", JSON.stringify(registry));
       } catch (e) {}
     }
 
     function switchTab(mode) {
-      duplicateAlert.style.display = "none";
       ticketSection.style.display = "none";
       tabsBar.style.display = "grid";
-
       if (mode === "register") {
-        tabRegister.classList.add("active");
-        tabLookup.classList.remove("active");
-        formCard.style.display = "block";
+        tabRegisterBtn.classList.add("active");
+        tabLookupBtn.classList.remove("active");
+        registerCard.style.display = "block";
         lookupCard.style.display = "none";
       } else {
-        tabLookup.classList.add("active");
-        tabRegister.classList.remove("active");
-        formCard.style.display = "none";
+        tabLookupBtn.classList.add("active");
+        tabRegisterBtn.classList.remove("active");
         lookupCard.style.display = "block";
+        registerCard.style.display = "none";
       }
     }
 
-    tabRegister.addEventListener("click", () => switchTab("register"));
-    tabLookup.addEventListener("click", () => switchTab("lookup"));
+    tabRegisterBtn.addEventListener("click", () => switchTab("register"));
+    tabLookupBtn.addEventListener("click", () => switchTab("lookup"));
 
     nationalIdInput.addEventListener("input", () => {
       const cleaned = normalizeDigits(nationalIdInput.value).replace(/\D/g, "").slice(0, 14);
       nationalIdInput.value = cleaned;
       nidCount.textContent = `${cleaned.length} / 14`;
       nidError.textContent = "";
-      duplicateAlert.style.display = "none";
     });
 
     phoneNumberInput.addEventListener("input", () => {
@@ -584,12 +611,318 @@
       nameError.textContent = "";
     });
 
-    lookupNationalIdInput.addEventListener("input", () => {
-      const cleaned = normalizeDigits(lookupNationalIdInput.value).replace(/\D/g, "").slice(0, 14);
-      lookupNationalIdInput.value = cleaned;
-      lookupNidCount.textContent = `${cleaned.length} / 14`;
+    lookupNidInput.addEventListener("input", () => {
+      const cleaned = normalizeDigits(lookupNidInput.value).replace(/\D/g, "").slice(0, 14);
+      lookupNidInput.value = cleaned;
+      lookupCount.textContent = `${cleaned.length} / 14`;
       lookupError.textContent = "";
     });
+
+    function renderQRCode(payloadText) {
+      const qrOutput = document.getElementById("qrOutput");
+      qrOutput.innerHTML = "";
+      activeQrDataUrl = "";
+
+      if (typeof qrcode === "function") {
+        const qr = qrcode(0, "L");
+        qr.addData(unescape(encodeURIComponent(payloadText)));
+        qr.make();
+        const imgTagHtml = qr.createImgTag(6, 4);
+        qrOutput.innerHTML = imgTagHtml;
+        const imgEl = qrOutput.querySelector("img");
+        if (imgEl && imgEl.src) {
+          activeQrDataUrl = imgEl.src;
+        }
+      }
+    }
+
+    function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = String(text || "").split(" ");
+      let line = "";
+      let currentY = y;
+
+      for (let i = 0; i < words.length; i++) {
+        const testLine = line ? line + " " + words[i] : words[i];
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && line) {
+          ctx.fillText(line, x, currentY);
+          line = words[i];
+          currentY += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      if (line) {
+        ctx.fillText(line, x, currentY);
+        currentY += lineHeight;
+      }
+      return currentY;
+    }
+
+    function buildTicketCanvas(record) {
+      return new Promise((resolve, reject) => {
+        try {
+          const width = 900;
+          const height = 1280;
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+
+          // خلفية داكنة ملكية
+          const bgGrad = ctx.createLinearGradient(0, 0, width, height);
+          bgGrad.addColorStop(0, "#13274c");
+          bgGrad.addColorStop(0.55, "#0b172d");
+          bgGrad.addColorStop(1, "#081020");
+          ctx.fillStyle = bgGrad;
+          ctx.fillRect(0, 0, width, height);
+
+          // إطار ذهبي خارجي وداخلي
+          ctx.strokeStyle = "#d4af37";
+          ctx.lineWidth = 8;
+          ctx.strokeRect(28, 28, width - 56, height - 56);
+
+          ctx.strokeStyle = "rgba(240, 214, 117, 0.35)";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(44, 44, width - 88, height - 88);
+
+          ctx.textAlign = "center";
+          ctx.direction = "rtl";
+
+          // شارة المبادرة
+          ctx.fillStyle = "rgba(212, 175, 55, 0.18)";
+          ctx.fillRect(width / 2 - 150, 76, 300, 44);
+          ctx.fillStyle = "#f0d675";
+          ctx.font = "bold 24px Cairo, sans-serif";
+          ctx.fillText("مبادرة هويتنا سند", width / 2, 106);
+
+          // العنوان الرئيسي
+          ctx.fillStyle = "#f0d675";
+          ctx.font = "bold 40px Amiri, serif";
+          ctx.fillText("بطاقة حضور وتعزيز الهوية المصرية", width / 2, 174);
+
+          // رقم التذكرة
+          const ticketId = record.ticketId || ("HWT-" + String(record.nationalId).slice(-6));
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 26px Cairo, sans-serif";
+          ctx.fillText(`كود التذكرة: ${ticketId}`, width / 2, 224);
+
+          // صندوق بيانات المسجل
+          ctx.fillStyle = "rgba(9, 19, 38, 0.78)";
+          ctx.fillRect(80, 256, width - 160, 230);
+          ctx.strokeStyle = "rgba(212, 175, 55, 0.45)";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(80, 256, width - 160, 230);
+
+          ctx.textAlign = "right";
+          ctx.fillStyle = "#f0d675";
+          ctx.font = "bold 25px Cairo, sans-serif";
+          ctx.fillText(`الاسم الرباعي: ${record.fullName}`, width - 110, 305);
+
+          ctx.fillStyle = "#f8fafc";
+          ctx.font = "bold 25px Cairo, sans-serif";
+          ctx.fillText(`الرقم القومي: ${record.nationalId}`, width - 110, 362);
+          ctx.fillText(`رقم التليفون: ${record.phoneNumber}`, width - 110, 419);
+          ctx.fillText(`تاريخ التسجيل: ${record.registeredAt || "مسجل"}`, width - 110, 468);
+
+          // صندوق العنوان
+          ctx.fillStyle = "rgba(212, 175, 55, 0.14)";
+          ctx.fillRect(80, 512, width - 160, 145);
+          ctx.strokeStyle = "rgba(212, 175, 55, 0.55)";
+          ctx.strokeRect(80, 512, width - 160, 145);
+
+          ctx.fillStyle = "#f0d675";
+          ctx.font = "bold 24px Cairo, sans-serif";
+          ctx.fillText("عنوان الحفل:", width - 110, 552);
+
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "600 22px Cairo, sans-serif";
+          wrapCanvasText(ctx, VENUE_TEXT, width - 110, 590, width - 220, 32);
+
+          // رسم الباركود في منتصف البطاقة
+          const qrSize = 360;
+          const qrBoxX = (width - qrSize - 36) / 2;
+          const qrBoxY = 695;
+
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(qrBoxX, qrBoxY, qrSize + 36, qrSize + 36);
+
+          if (activeQrDataUrl) {
+            const qrImg = new Image();
+            qrImg.onload = () => {
+              ctx.drawImage(qrImg, qrBoxX + 18, qrBoxY + 18, qrSize, qrSize);
+
+              ctx.textAlign = "center";
+              ctx.fillStyle = "#cbd5e1";
+              ctx.font = "600 21px Cairo, sans-serif";
+              ctx.fillText("يرجى إبراز هذا الباركود عند بوابة الدخول", width / 2, 1135);
+              ctx.fillStyle = "#f0d675";
+              ctx.font = "bold 22px Cairo, sans-serif";
+              ctx.fillText("مبادرة هويتنا سند • محافظة الفيوم", width / 2, 1178);
+
+              resolve(canvas);
+            };
+            qrImg.onerror = () => reject(new Error("تعذر تحميل صورة الباركود"));
+            qrImg.src = activeQrDataUrl;
+          } else {
+            resolve(canvas);
+          }
+        } catch (err) {
+          reject(err);
+        }
+      });
+    }
+
+    async function handleDownloadPng() {
+      if (!activeTicketRecord) return;
+      downloadPngBtn.disabled = true;
+      const originalText = downloadPngBtn.textContent;
+      downloadPngBtn.textContent = "جاري تجهيز الصورة...";
+
+      try {
+        const canvas = await buildTicketCanvas(activeTicketRecord);
+        const dataUrl = canvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        const safeId = activeTicketRecord.ticketId || activeTicketRecord.nationalId;
+        link.download = `تذكرة-هويتنا-سند-${safeId}.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        sheetStatus.textContent = "تم تحميل التذكرة كصورة (PNG) بنجاح.";
+      } catch (err) {
+        sheetStatus.textContent = "تعذر تحميل الصورة تلقائياً، يمكنك أخذ لقطة شاشة للتذكرة.";
+      } finally {
+        downloadPngBtn.disabled = false;
+        downloadPngBtn.textContent = originalText;
+      }
+    }
+
+    async function handleDownloadPdf() {
+      if (!activeTicketRecord) return;
+      downloadPdfBtn.disabled = true;
+      const originalText = downloadPdfBtn.textContent;
+      downloadPdfBtn.textContent = "جاري تجهيز ملف PDF...";
+
+      try {
+        const canvas = await buildTicketCanvas(activeTicketRecord);
+        const imgData = canvas.toDataURL("image/jpeg", 0.96);
+        const jsPdfLib = window.jspdf && window.jspdf.jsPDF;
+
+        if (!jsPdfLib) {
+          throw new Error("مكتبة PDF غير متوفرة");
+        }
+
+        const pdf = new jsPdfLib({
+          orientation: "portrait",
+          unit: "mm",
+          format: "a4"
+        });
+
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const margin = 10;
+        const maxW = pageWidth - margin * 2;
+        const maxH = pageHeight - margin * 2;
+
+        const ratio = canvas.height / canvas.width;
+        let renderW = maxW;
+        let renderH = renderW * ratio;
+
+        if (renderH > maxH) {
+          renderH = maxH;
+          renderW = renderH / ratio;
+        }
+
+        const x = (pageWidth - renderW) / 2;
+        const y = (pageHeight - renderH) / 2;
+
+        pdf.addImage(imgData, "JPEG", x, y, renderW, renderH);
+        const safeId = activeTicketRecord.ticketId || activeTicketRecord.nationalId;
+        pdf.save(`تذكرة-هويتنا-سند-${safeId}.pdf`);
+        sheetStatus.textContent = "تم تحميل التذكرة كملف PDF بنجاح.";
+      } catch (err) {
+        sheetStatus.textContent = "تعذر إنشاء ملف PDF مباشرة، يمكنك استخدام خيار تحميل الصورة (PNG).";
+      } finally {
+        downloadPdfBtn.disabled = false;
+        downloadPdfBtn.textContent = originalText;
+      }
+    }
+
+    downloadPngBtn.addEventListener("click", handleDownloadPng);
+    downloadPdfBtn.addEventListener("click", handleDownloadPdf);
+
+    function showTicket(record, statusText) {
+      const ticketId = record.ticketId || ("HWT-" + String(record.nationalId).slice(-6));
+      const normalizedRecord = {
+        ticketId,
+        fullName: record.fullName,
+        nationalId: record.nationalId,
+        phoneNumber: record.phoneNumber,
+        registeredAt: record.registeredAt || new Date().toLocaleString("ar-EG")
+      };
+      activeTicketRecord = normalizedRecord;
+
+      const qrPayload =
+        `مبادرة هويتنا سند\n` +
+        `رقم التذكرة: ${ticketId}\n` +
+        `الاسم: ${normalizedRecord.fullName}\n` +
+        `الرقم القومي: ${normalizedRecord.nationalId}\n` +
+        `التليفون: ${normalizedRecord.phoneNumber}\n` +
+        `العنوان: ${VENUE_TEXT}`;
+
+      document.getElementById("ticketCodeDisplay").textContent = `كود التذكرة: ${ticketId}`;
+      document.getElementById("outName").textContent = normalizedRecord.fullName;
+      document.getElementById("outNid").textContent = normalizedRecord.nationalId;
+      document.getElementById("outPhone").textContent = normalizedRecord.phoneNumber;
+      sheetStatus.textContent = statusText || "";
+
+      renderQRCode(qrPayload);
+
+      registerCard.style.display = "none";
+      lookupCard.style.display = "none";
+      tabsBar.style.display = "none";
+      ticketSection.style.display = "block";
+    }
+
+    async function queryRemoteByNationalId(nid) {
+      if (!GOOGLE_SCRIPT_URL || !GOOGLE_SCRIPT_URL.startsWith("https://")) {
+        return null;
+      }
+      try {
+        const sep = GOOGLE_SCRIPT_URL.includes("?") ? "&" : "?";
+        const res = await fetch(`${GOOGLE_SCRIPT_URL}${sep}nationalId=${encodeURIComponent(nid)}`, {
+          method: "GET"
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (data && data.found && data.record) {
+          return data.record;
+        }
+        return null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function sendToGoogleSheets(record) {
+      if (!GOOGLE_SCRIPT_URL || !GOOGLE_SCRIPT_URL.startsWith("https://")) {
+        return false;
+      }
+      try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify(record)
+        });
+        return true;
+      } catch (err) {
+        return false;
+      }
+    }
 
     function validateForm() {
       let valid = true;
@@ -617,130 +950,37 @@
       return { valid, cleanName, nid, phone };
     }
 
-    function renderQRCode(payloadText) {
-      const qrOutput = document.getElementById("qrOutput");
-      qrOutput.innerHTML = "";
-
-      if (typeof qrcode === "function") {
-        const qr = qrcode(0, "L");
-        qr.addData(unescape(encodeURIComponent(payloadText)));
-        qr.make();
-        qrOutput.innerHTML = qr.createImgTag(5, 4);
-      }
-    }
-
-    function displayTicket(record, statusMessage) {
-      const venue = record.venueAddress || VENUE_ADDRESS;
-      const qrPayload =
-        `مبادرة هويتنا سند\n` +
-        `رقم التذكرة: ${record.ticketId}\n` +
-        `الاسم: ${record.fullName}\n` +
-        `الرقم القومي: ${record.nationalId}\n` +
-        `التليفون: ${record.phoneNumber}\n` +
-        `العنوان: ${venue}`;
-
-      document.getElementById("ticketCodeDisplay").textContent = `كود التذكرة: ${record.ticketId}`;
-      document.getElementById("outName").textContent = record.fullName;
-      document.getElementById("outNid").textContent = record.nationalId;
-      document.getElementById("outPhone").textContent = record.phoneNumber;
-      document.getElementById("outVenueAddress").textContent = venue;
-
-      renderQRCode(qrPayload);
-
-      sheetStatus.textContent = statusMessage;
-      formCard.style.display = "none";
-      lookupCard.style.display = "none";
-      tabsBar.style.display = "none";
-      ticketSection.style.display = "block";
-
-      if (window.history && window.history.replaceState) {
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-    }
-
-    async function lookupByNationalId(nid) {
-      const localAll = getLocalRecords();
-      if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL.startsWith("https://")) {
-        try {
-          const url = `${GOOGLE_SCRIPT_URL}?action=lookup&nationalId=${encodeURIComponent(nid)}&_t=${Date.now()}`;
-          const res = await fetch(url, { method: "GET" });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.status === "found" && data.record) {
-              saveLocalRecord(data.record);
-              return data.record;
-            }
-            if (data.status === "not_found") {
-              return null;
-            }
-          }
-        } catch (err) {
-          // الاعتماد على السجل المحلي في حال عدم تحديث السكريبت بعد
-        }
-      }
-      return localAll[nid] || null;
-    }
-
-    async function sendToGoogleSheets(record) {
-      if (!GOOGLE_SCRIPT_URL || !GOOGLE_SCRIPT_URL.startsWith("https://")) {
-        return { ok: false };
-      }
-
-      try {
-        const res = await fetch(GOOGLE_SCRIPT_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "text/plain;charset=utf-8"
-          },
-          body: JSON.stringify(record)
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.status === "duplicate" && data.record) {
-            return { ok: false, duplicate: true, record: data.record };
-          }
-          return { ok: true };
-        }
-      } catch (err) {
-        try {
-          await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: {
-              "Content-Type": "text/plain;charset=utf-8"
-            },
-            body: JSON.stringify(record)
-          });
-          return { ok: true };
-        } catch (e2) {
-          return { ok: false };
-        }
-      }
-      return { ok: true };
-    }
-
-    viewExistingTicketBtn.addEventListener("click", () => {
-      if (cachedExistingRecord) {
-        displayTicket(cachedExistingRecord, "تم استرجاع بطاقة الحضور المسجلة مسبقاً لهذا الرقم القومي.");
-      }
-    });
-
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       event.stopPropagation();
 
       const { valid, cleanName, nid, phone } = validateForm();
-      if (!valid) return;
+      if (!valid) {
+        return;
+      }
 
       submitBtn.disabled = true;
-      submitBtn.textContent = "جاري التحقق من الرقم القومي وتسجيل البيانات...";
-      duplicateAlert.style.display = "none";
+      submitBtn.textContent = "جاري التحقق وإصدار التذكرة...";
 
-      const existing = await lookupByNationalId(nid);
-      if (existing) {
-        cachedExistingRecord = existing;
-        duplicateAlert.style.display = "block";
+      const localRegistry = getLocalRegistry();
+      if (localRegistry[nid]) {
+        saveLocalRecord(localRegistry[nid]);
+        showTicket(
+          localRegistry[nid],
+          "هذا الرقم القومي مسجل بالفعل (التسجيل لمرة واحدة فقط) — تم عرض تذكرتك السابقة."
+        );
+        submitBtn.disabled = false;
+        submitBtn.textContent = "تأكيد التسجيل وإصدار الباركود";
+        return;
+      }
+
+      const existingRemote = await queryRemoteByNationalId(nid);
+      if (existingRemote) {
+        saveLocalRecord(existingRemote);
+        showTicket(
+          existingRemote,
+          "هذا الرقم القومي مسجل بالفعل في السجل (التسجيل لمرة واحدة فقط) — تم استرجاع تذكرتك."
+        );
         submitBtn.disabled = false;
         submitBtn.textContent = "تأكيد التسجيل وإصدار الباركود";
         return;
@@ -754,27 +994,21 @@
         fullName: cleanName,
         nationalId: nid,
         phoneNumber: phone,
-        venueAddress: VENUE_ADDRESS,
         registeredAt
       };
 
-      const postResult = await sendToGoogleSheets(record);
+      saveLocalRecord(record);
+      const sent = await sendToGoogleSheets(record);
 
-      if (postResult.duplicate && postResult.record) {
-        saveLocalRecord(postResult.record);
-        cachedExistingRecord = postResult.record;
-        duplicateAlert.style.display = "block";
-        submitBtn.disabled = false;
-        submitBtn.textContent = "تأكيد التسجيل وإصدار الباركود";
-        return;
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState({}, document.title, window.location.pathname);
       }
 
-      saveLocalRecord(record);
-      displayTicket(
+      showTicket(
         record,
-        postResult.ok
-          ? "تم تسجيل بياناتك وإصدار الباركود بنجاح (مسجل لمرة واحدة برقمك القومي)."
-          : "تم إصدار الباركود وحفظه بنجاح."
+        sent
+          ? "تم تسجيل بياناتك وإصدار الباركود بنجاح (تسجيل لمرة واحدة لكل رقم قومي)."
+          : "تم إصدار الباركود بنجاح."
       );
 
       submitBtn.disabled = false;
@@ -785,41 +1019,52 @@
       event.preventDefault();
       event.stopPropagation();
 
-      const nid = lookupNationalIdInput.value.trim();
+      const nid = normalizeDigits(lookupNidInput.value).replace(/\D/g, "").trim();
       if (!/^\d{14}$/.test(nid)) {
-        lookupError.textContent = "يرجى إدخال الرقم القومي الصحيح المكون من 14 رقماً.";
+        lookupError.textContent = "يرجى إدخال رقم قومي مكون من 14 رقماً بالضبط.";
         return;
       }
 
       lookupBtn.disabled = true;
-      lookupBtn.textContent = "جاري البحث عن التذكرة...";
+      lookupBtn.textContent = "جاري البحث...";
       lookupError.textContent = "";
 
-      const foundRecord = await lookupByNationalId(nid);
-
-      if (foundRecord) {
-        displayTicket(foundRecord, "تم العثور على تسجيلك بنجاح. يمكنك استخدام هذا الباركود للدخول.");
-      } else {
-        lookupError.textContent = "هذا الرقم القومي غير مسجل حتى الآن. يمكنك التسجيل من تبويب (تسجيل حضور جديد).";
+      const remoteRecord = await queryRemoteByNationalId(nid);
+      if (remoteRecord) {
+        saveLocalRecord(remoteRecord);
+        showTicket(remoteRecord, "تم العثور على بياناتك وإظهار الباركود بنجاح.");
+        lookupBtn.disabled = false;
+        lookupBtn.textContent = "بحث وإظهار الباركود";
+        return;
       }
 
+      const localRegistry = getLocalRegistry();
+      if (localRegistry[nid]) {
+        showTicket(localRegistry[nid], "تم استرجاع بياناتك وإظهار الباركود بنجاح.");
+        lookupBtn.disabled = false;
+        lookupBtn.textContent = "بحث وإظهار الباركود";
+        return;
+      }
+
+      lookupError.textContent = "لم يتم العثور على تسجيل بهذا الرقم القومي.";
       lookupBtn.disabled = false;
-      lookupBtn.textContent = "استعلام وعرض الباركود";
+      lookupBtn.textContent = "بحث وإظهار الباركود";
     });
 
-    resetBtn.addEventListener("click", () => {
+    backHomeBtn.addEventListener("click", () => {
       form.reset();
       lookupForm.reset();
       nidCount.textContent = "0 / 14";
       phoneCount.textContent = "0 / 11";
-      lookupNidCount.textContent = "0 / 14";
+      lookupCount.textContent = "0 / 14";
       nameError.textContent = "";
       nidError.textContent = "";
       phoneError.textContent = "";
       lookupError.textContent = "";
+      activeTicketRecord = null;
+      activeQrDataUrl = "";
       switchTab("register");
     });
   </script>
 </body>
 </html>
-```
